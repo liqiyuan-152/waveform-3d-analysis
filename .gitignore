@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-types
+dist-demo
+coverage
+.vite
+.idea
+*.local
+*.log
