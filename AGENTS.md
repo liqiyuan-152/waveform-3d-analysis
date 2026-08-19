@@ -25,8 +25,11 @@ pnpm format         # prettier
 
 ## 工程约定
 
+- `src/` 下所有源文件不超过 400 行（`pnpm lint` 的 `max-lines` 与 `pnpm check:file-length` 双重把关）；超出时按职责拆分模块，而不是调高限制。
 - 组件为 TSX：类型检查依赖 `src/env.d.ts` 中的 `vue/jsx` 全局命名空间引用；
   构建转换由 `vite.config.ts` / `vite.lib.config.ts` 的 `oxc.jsx`（automatic + `vue`）完成，两处需同步修改。
+- 大组件按「编排壳 + 控制器/渲染器工厂 + 展示子组件」拆分（参考 `ThreeDWaveformChart` 的拆分方式）；
+  控制器与渲染器之间通过 host 回调/绑定对象惰性解耦，禁止循环依赖。
 - 样式使用 CSS Modules（`*.module.less`），新增类名须与组件内 `styles` 引用一致。
 - `plotly.js-dist-min`、`vue`、`ant-design-vue`、`@ant-design/icons-vue`、`@vueuse/core` 在库构建中外部化。
 - 版本发布：打 tag 触发（参考 waveform-analysis 的发布流程），tag 与 package.json 版本一致。

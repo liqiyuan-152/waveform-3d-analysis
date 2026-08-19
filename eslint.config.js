@@ -14,6 +14,9 @@ export default tseslint.config(
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'max-lines': ['error', { max: 400, skipBlankLines: false, skipComments: false }],
+    },
   },
   {
     files: ['scripts/**/*.mjs'],

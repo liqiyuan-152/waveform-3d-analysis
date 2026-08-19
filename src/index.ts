@@ -22,8 +22,10 @@ export type {
 } from './types'
 
 // 场景与数据集类型
-export type { SurfaceDataset, SurfaceScene, SurfaceViewPreset } from './core/scene'
-export type { SurfaceCamera, SurfaceCameraBasis } from './core/scene'
+export type { SurfaceDataset, SurfaceScene } from './core/scene'
+
+// 相机类型与常量
+export type { SurfaceCamera, SurfaceCameraBasis, SurfaceViewPreset } from './core/camera'
 
 // 视图与控制类型
 export type {
@@ -53,23 +55,23 @@ export {
   sortThreeDChannelRows,
 } from './core/queryAdapter'
 
-// 场景构建与相机控制
+// 相机控制
 export {
   animateSurfaceCamera,
-  buildSurfacePlotConfig,
-  buildSurfaceScene,
   cloneSurfaceCamera,
   easeSurfaceCameraProgress,
   getSurfaceCameraBasis,
   getSurfaceCameraPreset,
   interpolateSurfaceCamera,
-  matlabJet,
   matchesSurfaceCameraPreset,
   readSurfaceCamera,
   surfaceCameraAnimationDuration,
   surfaceDefaultCamera,
   surfaceSideCamera,
-} from './core/scene'
+} from './core/camera'
+
+// 场景构建
+export { buildSurfacePlotConfig, buildSurfaceScene, matlabJet } from './core/scene'
 
 // 视图构建
 export {

@@ -31,6 +31,7 @@
     "build:demo": "vite build",
     "preview": "vite preview --outDir dist-demo",
     "typecheck": "vue-tsc -b",
+    "check:file-length": "node scripts/check-file-length.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

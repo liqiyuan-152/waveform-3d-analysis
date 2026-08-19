@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  buildSurfacePlotConfig,
-  buildSurfaceScene,
-  cloneSurfaceCamera,
-  getSurfaceCameraPreset,
-  interpolateSurfaceCamera,
-  matchesSurfaceCameraPreset,
-  readSurfaceCamera,
-} from './scene'
+import { getSurfaceCameraPreset } from './camera'
+import { buildSurfacePlotConfig, buildSurfaceScene, matlabJet } from './scene'
 import type { SurfaceView } from './surfaceView'
 
 const buildView = (overrides: Partial<SurfaceView> = {}): SurfaceView => ({
@@ -31,48 +24,6 @@ const buildView = (overrides: Partial<SurfaceView> = {}): SurfaceView => ({
   timeUnit: 'ms',
   valueUnit: 'V',
   ...overrides,
-})
-
-describe('camera presets', () => {
-  it('returns defensive copies', () => {
-    const first = getSurfaceCameraPreset('side')
-    const second = getSurfaceCameraPreset('side')
-    expect(first).not.toBe(second)
-    expect(cloneSurfaceCamera(first)).toEqual(first)
-  })
-
-  it('matches a preset camera only for the same preset', () => {
-    const camera = getSurfaceCameraPreset('top')
-    expect(matchesSurfaceCameraPreset(camera, 'top')).toBe(true)
-    expect(matchesSurfaceCameraPreset(camera, 'front')).toBe(false)
-    expect(matchesSurfaceCameraPreset({ invalid: true }, 'top')).toBe(false)
-  })
-
-  it('reads a camera from an unknown payload', () => {
-    expect(readSurfaceCamera(getSurfaceCameraPreset('default'))).toEqual(
-      getSurfaceCameraPreset('default'),
-    )
-    expect(readSurfaceCamera({ up: { x: 0, y: 0, z: 1 } })).toBeNull()
-  })
-})
-
-describe('interpolateSurfaceCamera', () => {
-  it('returns exact endpoints outside (0, 1)', () => {
-    const from = getSurfaceCameraPreset('side')
-    const to = getSurfaceCameraPreset('front')
-
-    expect(interpolateSurfaceCamera(from, to, 0)).toEqual(from)
-    expect(interpolateSurfaceCamera(from, to, 1)).toEqual(to)
-  })
-
-  it('keeps camera units normalized in between', () => {
-    const from = getSurfaceCameraPreset('side')
-    const to = getSurfaceCameraPreset('top')
-    const middle = interpolateSurfaceCamera(from, to, 0.5)
-
-    expect(Math.hypot(middle.up.x, middle.up.y, middle.up.z)).toBeCloseTo(1, 6)
-    expect(middle.eye).toBeDefined()
-  })
 })
 
 describe('buildSurfacePlotConfig', () => {
@@ -105,5 +56,10 @@ describe('buildSurfaceScene', () => {
       showSlice: false,
     })
     expect(scene.layout.scene?.yaxis?.title).toEqual({ text: '空间位置' })
+  })
+
+  it('keeps the matlab jet color scale with 7 anchors', () => {
+    expect(matlabJet).toHaveLength(7)
+    expect(matlabJet[0]).toEqual([0, '#000080'])
   })
 })
