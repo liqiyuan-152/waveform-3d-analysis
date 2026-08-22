@@ -68,5 +68,6 @@ jobs:
       - name: Upload and activate release
         shell: bash
         run: |
-          rsync -az --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r -e 'ssh -o StrictHostKeyChecking=yes' site/ site-deploy@lqycustomsite.online:/srv/project-deployments/waveform-3d-analysis/.staging/${GITHUB_REF_NAME}/
+          ssh -o StrictHostKeyChecking=yes site-deploy@lqycustomsite.online "/usr/local/bin/deploy-static prepare waveform-3d-analysis ${GITHUB_REF_NAME}"
+          rsync -azc --delete --itemize-changes --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r -e 'ssh -o StrictHostKeyChecking=yes' site/ site-deploy@lqycustomsite.online:/srv/project-deployments/waveform-3d-analysis/.staging/${GITHUB_REF_NAME}/
           ssh -o StrictHostKeyChecking=yes site-deploy@lqycustomsite.online "/usr/local/bin/deploy-static publish waveform-3d-analysis ${GITHUB_REF_NAME} ${GITHUB_SHA}"
