@@ -1,0 +1,72 @@
+name: Deploy demo
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  tag-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.gate.outputs.deploy }}
+    steps:
+      - id: gate
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "deploy=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "deploy=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  build:
+    needs: tag-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - run: pnpm install --frozen-lockfile
+      - run: DEMO_BASE_PATH=/waveform-3d-analysis/ pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: waveform-3d-analysis-site
+          path: dist-demo
+          if-no-files-found: error
+
+  deploy:
+    needs: [tag-gate, build]
+    if: needs.tag-gate.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: waveform-3d-analysis-site
+          path: site
+      - name: Configure deployment SSH
+        shell: bash
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Upload and activate release
+        shell: bash
+        run: |
+          rsync -az --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r -e 'ssh -o StrictHostKeyChecking=yes' site/ site-deploy@lqycustomsite.online:/srv/project-deployments/waveform-3d-analysis/.staging/${GITHUB_REF_NAME}/
+          ssh -o StrictHostKeyChecking=yes site-deploy@lqycustomsite.online "/usr/local/bin/deploy-static publish waveform-3d-analysis ${GITHUB_REF_NAME} ${GITHUB_SHA}"
