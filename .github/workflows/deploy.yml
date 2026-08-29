@@ -53,21 +53,16 @@ jobs:
         with:
           name: waveform-3d-analysis-site
           path: site
-      - name: Configure deployment SSH
-        shell: bash
-        env:
-          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          test -n "$DEPLOY_SSH_PRIVATE_KEY"
-          test -n "$DEPLOY_KNOWN_HOSTS"
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
       - name: Upload and activate release
         shell: bash
+        env:
+          DEPLOY_API_TOKEN: ${{ secrets.DEPLOY_API_TOKEN }}
         run: |
-          ssh -o StrictHostKeyChecking=yes site-deploy@lqycustomsite.online "/usr/local/bin/deploy-static prepare waveform-3d-analysis ${GITHUB_REF_NAME}"
-          rsync -azc --delete --itemize-changes --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r -e 'ssh -o StrictHostKeyChecking=yes' site/ site-deploy@lqycustomsite.online:/srv/project-deployments/waveform-3d-analysis/.staging/${GITHUB_REF_NAME}/
-          ssh -o StrictHostKeyChecking=yes site-deploy@lqycustomsite.online "/usr/local/bin/deploy-static publish waveform-3d-analysis ${GITHUB_REF_NAME} ${GITHUB_SHA}"
+          test -n "$DEPLOY_API_TOKEN"
+          tar -C site -czf site.tar.gz .
+          curl --fail-with-body --silent --show-error --retry 3 --connect-timeout 10 --max-time 120 \
+            -X POST "https://lqycustomsite.online/deployment-hook/projects/waveform-3d-analysis/releases/${GITHUB_REF_NAME}" \
+            -H "Authorization: Bearer ${DEPLOY_API_TOKEN}" \
+            -H "X-Deployment-Commit: ${GITHUB_SHA}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @site.tar.gz
