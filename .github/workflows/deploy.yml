@@ -60,7 +60,7 @@ jobs:
         run: |
           test -n "$DEPLOY_API_TOKEN"
           tar -C site -czf site.tar.gz .
-          curl --fail-with-body --silent --show-error --retry 3 --connect-timeout 10 --max-time 120 \
+          curl --fail-with-body --silent --show-error --retry 3 --connect-timeout 10 --max-time 900 \
             -X POST "https://lqycustomsite.online/deployment-hook/projects/waveform-3d-analysis/releases/${GITHUB_REF_NAME}" \
             -H "Authorization: Bearer ${DEPLOY_API_TOKEN}" \
             -H "X-Deployment-Commit: ${GITHUB_SHA}" \
